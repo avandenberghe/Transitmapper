@@ -60,4 +60,4 @@ Transit data from official GTFS feeds:
 
 ## License
 
-
+European Union Public License 1.2
