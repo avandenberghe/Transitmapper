@@ -41,13 +41,7 @@ Open http://localhost:8000
 
 ## Deployment
 
-The `web/` folder is a complete static site. Deploy anywhere:
-
-- **Cloudflare Pages** - Free, recommended
-- **Netlify** - Free tier available
-- **Vercel** - Free tier available
-- **GitHub Pages** - Free
-
+The `web/` folder is a complete static site. Deploy on any static file host:
 Just point the build output to the `web/` directory.
 
 ## Tech Stack
