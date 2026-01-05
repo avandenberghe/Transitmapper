@@ -2,7 +2,6 @@
 
 Interactive transit map viewer for Belgium showing bus, metro, tram, and train routes on OpenStreetMap.
 
-![TransitMapper Screenshot](https://via.placeholder.com/800x450?text=TransitMapper+Screenshot)
 
 ## Features
 
