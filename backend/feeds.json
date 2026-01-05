@@ -1,0 +1,41 @@
+{
+  "countries": {
+    "belgium": {
+      "name": "Belgium",
+      "feeds": [
+        {
+          "id": "stib",
+          "name": "STIB-MIVB (Brussels)",
+          "agency": "STIB-MIVB",
+          "url": "https://gtfs.irail.be/mivb/mivb-gtfs.zip",
+          "keywords": ["brussels", "bruxelles", "brussel", "stib", "mivb"],
+          "region": "Brussels"
+        },
+        {
+          "id": "delijn",
+          "name": "De Lijn (Flanders)",
+          "agency": "De Lijn",
+          "url": "https://gtfs.irail.be/de-lijn/de_lijn-gtfs.zip",
+          "keywords": ["flanders", "vlaanderen", "antwerp", "ghent", "bruges", "leuven", "delijn", "de lijn"],
+          "region": "Flanders"
+        },
+        {
+          "id": "tec",
+          "name": "TEC (Wallonia)",
+          "agency": "TEC",
+          "url": "https://opendata.tec-wl.be/Current%20GTFS/TEC-GTFS.zip",
+          "keywords": ["wallonia", "wallonie", "liege", "charleroi", "namur", "mons", "tec"],
+          "region": "Wallonia"
+        },
+        {
+          "id": "nmbs",
+          "name": "NMBS/SNCB (Belgian Rail)",
+          "agency": "NMBS/SNCB",
+          "url": "https://gtfs.irail.be/nmbs/gtfs/latest.zip",
+          "keywords": ["nmbs", "sncb", "train", "rail", "belgian rail", "trein"],
+          "region": "National"
+        }
+      ]
+    }
+  }
+}

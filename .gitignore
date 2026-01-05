@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Cache (don't commit downloaded GTFS files)
+gtfs_cache/
+tile_cache/
+*.parsed
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Screenshots
+*.png
+
+# Generated data (optional - can commit for faster deploys)
+# web/data/*.geojson

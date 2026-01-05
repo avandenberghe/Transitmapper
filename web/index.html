@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransitMapper</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+        #sidebar {
+            width: 280px;
+            background: #f5f5f5;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #ccc;
+        }
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        h3 {
+            font-size: 14px;
+            color: #666;
+            margin: 15px 0 10px 0;
+        }
+        .feed-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 13px;
+        }
+        .feed-btn:hover {
+            background: #e0e0e0;
+        }
+        .feed-btn.active {
+            background: #4a90d9;
+            color: white;
+            border-color: #3a7bc8;
+        }
+        .feed-btn .agency {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
+        }
+        .feed-btn.active .agency {
+            color: #cce0f5;
+        }
+        .filter-section {
+            margin-top: 20px;
+        }
+        .filter-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .filter-item input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+        .filter-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .count {
+            color: #888;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+        .loading {
+            color: #4a90d9;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>TransitMapper</h1>
+
+        <h3>Select Feed</h3>
+        <div id="feeds"></div>
+
+        <div class="filter-section">
+            <h3>Show</h3>
+            <div class="filter-item">
+                <input type="checkbox" id="filter-bus" data-type="3">
+                <label for="filter-bus">
+                    <span class="color-dot" style="background: #FF7F00"></span>
+                    Bus <span class="count" id="count-bus"></span>
+                </label>
+            </div>
+            <div class="filter-item">
+                <input type="checkbox" id="filter-metro" data-type="1">
+                <label for="filter-metro">
+                    <span class="color-dot" style="background: #1F78B4"></span>
+                    Metro <span class="count" id="count-metro"></span>
+                </label>
+            </div>
+            <div class="filter-item">
+                <input type="checkbox" id="filter-train" data-type="2">
+                <label for="filter-train">
+                    <span class="color-dot" style="background: #33A02C"></span>
+                    Train <span class="count" id="count-train"></span>
+                </label>
+            </div>
+            <div class="filter-item">
+                <input type="checkbox" id="filter-tram" data-type="0">
+                <label for="filter-tram">
+                    <span class="color-dot" style="background: #E31A1C"></span>
+                    Tram <span class="count" id="count-tram"></span>
+                </label>
+            </div>
+        </div>
+
+        <div id="status">Select a feed to begin</div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Belgium
+        const map = L.map('map').setView([50.85, 4.35], 8);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // State
+        let currentGeoJSON = null;
+        let routeLayer = null;
+        let stopLayer = null;
+        let routeCounts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+
+        // Load feeds from static manifest
+        async function loadFeeds() {
+            const feeds = await fetch('data/feeds.json').then(r => r.json());
+            const container = document.getElementById('feeds');
+
+            feeds.forEach(feed => {
+                const btn = document.createElement('button');
+                btn.className = 'feed-btn';
+                btn.innerHTML = `${feed.name}<div class="agency">${feed.agency}</div>`;
+                btn.onclick = () => loadFeed(feed, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        // Load a feed's GeoJSON data
+        async function loadFeed(feed, btn) {
+            // Update button states
+            document.querySelectorAll('.feed-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.getElementById('status').innerHTML = '<span class="loading">Loading ' + feed.name + '...</span>';
+
+            try {
+                // Load static GeoJSON file
+                const geojson = await fetch(`data/${feed.id}.geojson`).then(r => r.json());
+
+                currentGeoJSON = geojson;
+                countRoutes(geojson);
+                updateMap();
+
+                // Fit map to data bounds
+                if (routeLayer) {
+                    const bounds = routeLayer.getBounds();
+                    if (bounds.isValid()) {
+                        map.fitBounds(bounds, { padding: [20, 20] });
+                    }
+                }
+
+                const routeCount = geojson.features.filter(f => f.geometry.type === 'LineString').length;
+                document.getElementById('status').textContent = `Loaded ${routeCount} routes`;
+
+            } catch (e) {
+                document.getElementById('status').textContent = 'Failed to load feed';
+                console.error(e);
+            }
+        }
+
+        // Count routes by type
+        function countRoutes(geojson) {
+            routeCounts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+            geojson.features.forEach(f => {
+                if (f.geometry.type === 'LineString') {
+                    const type = f.properties.route_type;
+                    routeCounts[type] = (routeCounts[type] || 0) + 1;
+                }
+            });
+
+            document.getElementById('count-tram').textContent = routeCounts[0] ? `(${routeCounts[0]})` : '';
+            document.getElementById('count-metro').textContent = routeCounts[1] ? `(${routeCounts[1]})` : '';
+            document.getElementById('count-train').textContent = routeCounts[2] ? `(${routeCounts[2]})` : '';
+            document.getElementById('count-bus').textContent = routeCounts[3] ? `(${routeCounts[3]})` : '';
+        }
+
+        // Get selected route types
+        function getSelectedTypes() {
+            const types = [];
+            document.querySelectorAll('.filter-item input:checked').forEach(cb => {
+                types.push(parseInt(cb.dataset.type));
+            });
+            return types;
+        }
+
+        // Update map with current filters
+        function updateMap() {
+            if (!currentGeoJSON) return;
+
+            const selectedTypes = getSelectedTypes();
+
+            // Remove existing layers
+            if (routeLayer) map.removeLayer(routeLayer);
+            if (stopLayer) map.removeLayer(stopLayer);
+
+            // Filter features
+            const routes = currentGeoJSON.features.filter(f =>
+                f.geometry.type === 'LineString' &&
+                selectedTypes.includes(f.properties.route_type)
+            );
+
+            const stops = currentGeoJSON.features.filter(f =>
+                f.geometry.type === 'Point' &&
+                f.properties.route_types.some(t => selectedTypes.includes(t))
+            );
+
+            // Add route lines
+            routeLayer = L.geoJSON(routes, {
+                style: feature => ({
+                    color: feature.properties.color,
+                    weight: 3,
+                    opacity: 0.8
+                }),
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`<b>${feature.properties.name}</b><br>${feature.properties.route_type_name}`);
+                }
+            }).addTo(map);
+
+            // Add stops (only at higher zoom levels for performance)
+            if (map.getZoom() >= 12) {
+                stopLayer = L.geoJSON(stops, {
+                    pointToLayer: (feature, latlng) => {
+                        const radius = feature.properties.is_transfer ? 6 : 4;
+                        return L.circleMarker(latlng, {
+                            radius: radius,
+                            fillColor: '#fff',
+                            color: '#000',
+                            weight: 1,
+                            fillOpacity: 1
+                        });
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(`<b>${feature.properties.name}</b>`);
+                    }
+                }).addTo(map);
+            }
+        }
+
+        // Event listeners
+        document.querySelectorAll('.filter-item input').forEach(cb => {
+            cb.addEventListener('change', updateMap);
+        });
+
+        map.on('zoomend', () => {
+            if (currentGeoJSON) updateMap();
+        });
+
+        // Initialize
+        loadFeeds();
+    </script>
+</body>
+</html>

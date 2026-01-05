@@ -1,0 +1,30 @@
+[
+  {
+    "id": "stib",
+    "name": "STIB-MIVB (Brussels)",
+    "agency": "STIB-MIVB",
+    "region": "Brussels",
+    "country": "Belgium"
+  },
+  {
+    "id": "delijn",
+    "name": "De Lijn (Flanders)",
+    "agency": "De Lijn",
+    "region": "Flanders",
+    "country": "Belgium"
+  },
+  {
+    "id": "tec",
+    "name": "TEC (Wallonia)",
+    "agency": "TEC",
+    "region": "Wallonia",
+    "country": "Belgium"
+  },
+  {
+    "id": "nmbs",
+    "name": "NMBS/SNCB (Belgian Rail)",
+    "agency": "NMBS/SNCB",
+    "region": "National",
+    "country": "Belgium"
+  }
+]
