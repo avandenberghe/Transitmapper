@@ -41,15 +41,14 @@ Open http://localhost:8000
 
 ## Deployment
 
-The `web/` folder is a complete static site. Deploy on any static file host:
-Just point the build output to the `web/` directory.
+The `web/` folder is a complete static site. Deploy on any static file host, point the build output to the `web/` directory.
 
 ## Tech Stack
 
 - **Frontend**: Vanilla JS + [Leaflet.js](https://leafletjs.com/)
 - **Map tiles**: OpenStreetMap
 - **Data**: GTFS feeds converted to GeoJSON
-- **Hosting**: Any static file host
+- **Hosting**: Any static file host (one.com, statichost.eu, hosting.de, hetzner.com, combell.com, etc..)
 
 ## Data Sources
 
